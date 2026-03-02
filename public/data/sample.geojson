@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "SLUM001",
+        "families": 4,
+        "issue": "Water"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1011,28.7041],
+          [77.1013,28.7041],
+          [77.1013,28.7043],
+          [77.1011,28.7043],
+          [77.1011,28.7041]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "SLUM002",
+        "families": 6,
+        "issue": "Sanitation"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1014,28.7041],
+          [77.1016,28.7041],
+          [77.1016,28.7043],
+          [77.1014,28.7043],
+          [77.1014,28.7041]
+        ]]
+      }
+    }
+  ]
+}
