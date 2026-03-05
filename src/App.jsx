@@ -1,11 +1,22 @@
-import MapComponent from "./components/MapContainer";
-import "./index.css";
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Partners from "./pages/Partners";
 
 function App() {
   return (
-    <div className="app-container">
-      <h2 className="title">Slum Impact Dashboard</h2>
-      <MapComponent />
+    <div>
+
+      <Navbar />
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/partners" element={<Partners />} />
+      </Routes>
+
     </div>
   );
 }
