@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { MapContainer as LeafletMapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
+import "leaflet-draw";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { renderToStaticMarkup } from "react-dom/server";
-import boundary from "../data/boundary.json";
 
 function getCentroid(feature) {
   const geometry = feature?.geometry;
@@ -35,33 +36,44 @@ function getCentroid(feature) {
 
 function renderTooltipContent(p) {
   const jsx = (
-    <div style={{ maxWidth: "520px", padding: "12px", fontFamily: "system-ui, -apple-system, sans-serif", fontSize: "13px", lineHeight: "1.5", color: "#1f2937", background: "#ffffff", borderRadius: "10px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", alignItems: "flex-start", gap: "0" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-        <div><strong>New Slum Code:</strong> {p.New_Slum_code ?? "N/A"}</div>
-        <div><strong>Name:</strong> {p.Name ?? "N/A"}</div>
-        <div><strong>Cluster:</strong> {p.Cluster ?? "N/A"}</div>
-        <div><strong>Zone No:</strong> {p.Zone_no ?? "N/A"}</div>
-        <div><strong>Ward No:</strong> {p.Ward_No ?? "N/A"}</div>
-        <div><strong>Mouza:</strong> {p.Mouza ?? "N/A"}</div>
-        <div><strong>Khasra No:</strong> {p.Khasra_No ?? "N/A"}</div>
-      </div>
-      <div style={{ height: "100%", width: "1px", backgroundColor: "#e5e7eb", margin: "0 10px" }}></div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-        <div><strong>Constituency:</strong> {p.Constituency ?? "N/A"}</div>
-        <div><strong>Pre Post 95:</strong> {p.Pre_post_95 ?? "N/A"}</div>
-        <div><strong>Notification:</strong> {p.Notification ?? "N/A"}</div>
-        <div><strong>Ownership as per 7/12:</strong> {p["Ownership as per 7/12"] ?? "N/A"}</div>
-        <div><strong>Population:</strong> {p.Appx_Popu ?? 0}</div>
-        <div><strong>Households:</strong> {p.Appx_HH ?? 0}</div>
-        <div><strong>Area:</strong> {p.Appx_Area ?? "N/A"}</div>
-        <div><strong>Income:</strong> ₹{(p.monthly_Income ?? 0).toLocaleString()}</div>
-        <div><strong>Total Structures:</strong> {p.Total_Structure ?? 0}</div>
-        <div><strong>Pucca / Semi / Kaccha:</strong> {(p.Appx_Pucca ?? 0)} / {(p.Appx_Semi_pucca ?? 0)} / {(p.Appx_Kaccha ?? 0)}</div>
-        <div><strong>Piped Water:</strong> {p.piped_water ?? "N/A"}</div>
-        <div><strong>Sewerage:</strong> {p.Sewerage_network ?? "N/A"}</div>
-        <div><strong>Storm Drain:</strong> {p.strom_water_drain ?? "N/A"}</div>
-        <div><strong>Landuse:</strong> {p.Landuse ?? "N/A"}</div>
-      </div>
+    <div style={{ 
+      maxWidth: "560px", 
+      padding: "14px", 
+      fontFamily: "system-ui, -apple-system, sans-serif", 
+      fontSize: "13px", 
+      lineHeight: "1.55", 
+      color: "#1f2937", 
+      background: "#ffffff", 
+      borderRadius: "10px", 
+      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.15)", 
+      border: "1px solid #e5e7eb",
+      columnCount: 2,
+      columnGap: "28px",
+      columnRule: "1px solid #e5e7eb"
+    }}>
+      <div><strong>Code:</strong> {p.code ?? "N/A"}</div>
+      <div><strong>Name:</strong> {p.name ?? "N/A"}</div>
+      <div><strong>Cluster:</strong> {p.cluster ?? "N/A"}</div>
+      <div><strong>Zone:</strong> {p.zone ?? "N/A"}</div>
+      <div><strong>Ward:</strong> {p.ward ?? "N/A"}</div>
+      <div><strong>Mouza:</strong> {p.mouza ?? "N/A"}</div>
+      <div><strong>Khasra:</strong> {p.khasra ?? "N/A"}</div>
+      <div><strong>Constituency:</strong> {p.constituency ?? "N/A"}</div>
+      <div><strong>Pre Post 95:</strong> {p.prepost95 ?? "N/A"}</div>
+      <div><strong>Notification:</strong> {p.notification ?? "N/A"}</div>
+      <div><strong>Ownership:</strong> {p.ownership ?? "N/A"}</div>
+      <div><strong>Population:</strong> {p.population ?? 0}</div>
+      <div><strong>Households:</strong> {p.households ?? 0}</div>
+      <div><strong>Area:</strong> {p.area ?? "N/A"}</div>
+      <div><strong>Income:</strong> ₹{(p.income ?? 0).toLocaleString()}</div>
+      <div><strong>Total Structures:</strong> {p.structures ?? 0}</div>
+      <div><strong>Pucca Structures:</strong> {p.pucca ?? 0}</div>
+      <div><strong>Semi Pucca Structures:</strong> {p.Appx_Semi_pucca ?? 0}</div>
+      <div><strong>Kaccha Structures:</strong> {p.kaccha ?? 0}</div>
+      <div><strong>Piped Water:</strong> {p.water ?? "N/A"}</div>
+      <div><strong>Sewerage:</strong> {p.sewerage ?? "N/A"}</div>
+      <div><strong>Storm Drain:</strong> {p.drain ?? "N/A"}</div>
+      <div><strong>Landuse:</strong> {p.landuse ?? "N/A"}</div>
     </div>
   );
   return renderToStaticMarkup(jsx);
@@ -98,8 +110,11 @@ export default function Home() {
   const [mapInstance, setMapInstance] = useState(null);
   const markersListRef = useRef([]);
   const heatLayerRef = useRef(null);
+  const geoJsonRef = useRef(null);
+  const editableFeatureGroupRef = useRef(L.featureGroup());
   const [isMobile, setIsMobile] = useState(false);
   const [city, setCity] = useState("Delhi");
+  const [boundaryData, setBoundaryData] = useState(null);
   const [filters, setFilters] = useState({
     constituency: "",
     zone: "",
@@ -109,6 +124,7 @@ export default function Home() {
     hasStorm: false
   });
   const [selectedCode, setSelectedCode] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: "Vuln", direction: "desc" });
   const [showMarkers, setShowMarkers] = useState(true);
   const [showBoundaries, setShowBoundaries] = useState(true);
@@ -117,7 +133,14 @@ export default function Home() {
 
   const rowsPerPage = 10;
 
-  const features = boundary?.features || (Array.isArray(boundary) ? boundary : []);
+  useEffect(() => {
+    fetch("http://localhost:5000/api/boundary")
+      .then((res) => res.json())
+      .then((data) => setBoundaryData(data))
+      .catch((err) => console.error("Failed to fetch boundaries:", err));
+  }, []);
+
+  const features = boundaryData?.features || (Array.isArray(boundaryData) ? boundaryData : []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -128,17 +151,17 @@ export default function Home() {
 
   const globalAvgIncome = useMemo(() => {
     if (!features.length) return 0;
-    const sum = features.reduce((acc, f) => acc + (f.properties?.monthly_Income || 0), 0);
+    const sum = features.reduce((acc, f) => acc + (f.properties?.income || 0), 0);
     return sum / features.length;
   }, [features]);
 
   const calculateVuln = useCallback((p) => {
     if (!p) return 0;
     let score = 0;
-    if (p.piped_water === "No") score++;
-    if (p.Sewerage_network === "No") score++;
-    if ((p.Appx_Kaccha || 0) > (p.Appx_Pucca || 0)) score++;
-    if ((p.monthly_Income || 0) < globalAvgIncome) score++;
+    if (p.water === "No") score++;
+    if (p.sewerage === "No") score++;
+    if ((p.kaccha || 0) > (p.pucca || 0)) score++;
+    if ((p.income || 0) < globalAvgIncome) score++;
     return score;
   }, [globalAvgIncome]);
 
@@ -151,12 +174,12 @@ export default function Home() {
   const filteredFeatures = useMemo(() => {
     return features.filter((f) => {
       const p = f.properties || {};
-      if (filters.constituency && p.Constituency !== filters.constituency) return false;
-      if (filters.zone && String(p.Zone_no || "") !== filters.zone) return false;
-      if (filters.prePost && p.Pre_post_95 !== filters.prePost) return false;
-      if (filters.hasPiped && !["Yes", "Partial"].includes(p.piped_water || "")) return false;
-      if (filters.hasSewer && p.Sewerage_network !== "Yes") return false;
-      if (filters.hasStorm && p.strom_water_drain !== "Yes") return false;
+      if (filters.constituency && p.constituency !== filters.constituency) return false;
+      if (filters.zone && String(p.zone || "") !== filters.zone) return false;
+      if (filters.prePost && p.prepost95 !== filters.prePost) return false;
+      if (filters.hasPiped && !["Yes", "Partial"].includes(p.water || "")) return false;
+      if (filters.hasSewer && p.sewerage !== "Yes") return false;
+      if (filters.hasStorm && p.drain !== "Yes") return false;
       return true;
     });
   }, [features, filters]);
@@ -169,47 +192,56 @@ export default function Home() {
   const getPolygonStyle = useCallback((feature) => {
     const p = feature.properties || {};
     const score = calculateVuln(p);
-    const isSelected = p.New_Slum_code === selectedCode;
+    const isSelected = p.code === selectedCode;
     return {
       color: isSelected ? "#7C3AED" : "#1f2937",
-      weight: isSelected ? 7 : 4,
+      weight: isSelected ? 6 : 4,
+      dashArray: isSelected && isEditing ? "6, 6" : null,
       fillColor: getVulnColor(score),
       fillOpacity: isSelected ? 0.65 : 0.48
     };
-  }, [calculateVuln, selectedCode]);
+  }, [calculateVuln, selectedCode, isEditing]);
 
   const onEachFeatureHandler = useCallback((feature, layer) => {
     const p = feature.properties || {};
     const tooltipHtml = renderTooltipContent(p);
-    layer.bindTooltip(tooltipHtml, {
-      sticky: true,
-      opacity: 1
-    });
+    // Disable tooltip during editing to prevent interference with vertex dragging
+    if (!(isEditing && p.code === selectedCode)) {
+      layer.bindTooltip(tooltipHtml, {
+        sticky: true,
+        opacity: 1
+      });
+    }
     layer.on({
-      click: () => setSelectedCode(p.New_Slum_code),
+      click: () => {
+        setSelectedCode(p.code);
+        setIsEditing(false);
+      },
       mouseover: (e) => {
-        e.target.setStyle({
-          weight: 5,
-          fillOpacity: 0.65
-        });
-        e.target.openTooltip(e.latlng);
+        if (!isEditing) {
+          e.target.setStyle({
+            weight: 5,
+            fillOpacity: 0.65
+          });
+          e.target.openTooltip(e.latlng);
+        }
       },
       mouseout: (e) => {
         e.target.resetStyle();
       }
     });
-  }, [setSelectedCode]);
+  }, [setSelectedCode, isEditing, selectedCode]);
 
   const uniqueConstituencies = useMemo(() => {
-    return [...new Set(features.map((f) => f.properties?.Constituency).filter(Boolean))].sort();
+    return [...new Set(features.map((f) => f.properties?.constituency).filter(Boolean))].sort();
   }, [features]);
 
   const uniqueZones = useMemo(() => {
-    return [...new Set(features.map((f) => String(f.properties?.Zone_no || "")).filter(Boolean))].sort();
+    return [...new Set(features.map((f) => String(f.properties?.zone || "")).filter(Boolean))].sort();
   }, [features]);
 
   const uniquePrePosts = useMemo(() => {
-    return [...new Set(features.map((f) => f.properties?.Pre_post_95).filter(Boolean))].sort();
+    return [...new Set(features.map((f) => f.properties?.prepost95).filter(Boolean))].sort();
   }, [features]);
 
   const kpis = useMemo(() => {
@@ -218,14 +250,14 @@ export default function Home() {
     const count = filteredFeatures.length;
     filteredFeatures.forEach((f) => {
       const p = f.properties || {};
-      totalPopu += p.Appx_Popu || 0;
-      totalHH += p.Appx_HH || 0;
-      sumIncome += p.monthly_Income || 0;
-      totalStruct += p.Total_Structure || 0;
-      sumArea += parseArea(p.Appx_Area);
-      if (["Yes", "Partial"].includes(p.piped_water)) pipedC++;
-      if (p.Sewerage_network === "Yes") sewerC++;
-      if (p.strom_water_drain === "Yes") stormC++;
+      totalPopu += p.population || 0;
+      totalHH += p.households || 0;
+      sumIncome += p.income || 0;
+      totalStruct += p.structures || 0;
+      sumArea += parseArea(p.area);
+      if (["Yes", "Partial"].includes(p.water)) pipedC++;
+      if (p.sewerage === "Yes") sewerC++;
+      if (p.drain === "Yes") stormC++;
     });
     const avgInc = count ? Math.round(sumIncome / count) : 0;
     const pPct = count ? Math.round((pipedC / count) * 100) : 0;
@@ -247,7 +279,7 @@ export default function Home() {
   const constituencyData = useMemo(() => {
     const counts = {};
     filteredFeatures.forEach((f) => {
-      const key = f.properties?.Constituency || "Unknown";
+      const key = f.properties?.constituency || "Unknown";
       counts[key] = (counts[key] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
@@ -256,7 +288,7 @@ export default function Home() {
   const zoneData = useMemo(() => {
     const counts = {};
     filteredFeatures.forEach((f) => {
-      const key = String(f.properties?.Zone_no || "Unknown");
+      const key = String(f.properties?.zone || "Unknown");
       counts[key] = (counts[key] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
@@ -265,7 +297,7 @@ export default function Home() {
   const prePostData = useMemo(() => {
     const counts = {};
     filteredFeatures.forEach((f) => {
-      const key = f.properties?.Pre_post_95 || "Unknown";
+      const key = f.properties?.prepost95 || "Unknown";
       counts[key] = (counts[key] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -274,7 +306,7 @@ export default function Home() {
   const landuseData = useMemo(() => {
     const counts = {};
     filteredFeatures.forEach((f) => {
-      const key = f.properties?.Landuse || "Unknown";
+      const key = f.properties?.landuse || "Unknown";
       counts[key] = (counts[key] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -291,10 +323,10 @@ export default function Home() {
         va = calculateVuln(pa);
         vb = calculateVuln(pb);
       } else if (sortConfig.key === "Density") {
-        const areaA = parseArea(pa.Appx_Area);
-        va = areaA > 0 ? (pa.Appx_Popu || 0) / areaA : 0;
-        const areaB = parseArea(pb.Appx_Area);
-        vb = areaB > 0 ? (pb.Appx_Popu || 0) / areaB : 0;
+        const areaA = parseArea(pa.area);
+        va = areaA > 0 ? (pa.population || 0) / areaA : 0;
+        const areaB = parseArea(pb.area);
+        vb = areaB > 0 ? (pb.population || 0) / areaB : 0;
       } else {
         va = pa[sortConfig.key] ?? "";
         vb = pb[sortConfig.key] ?? "";
@@ -330,6 +362,7 @@ export default function Home() {
 
   const handleRowClick = useCallback((code) => {
     setSelectedCode((prev) => prev === code ? null : code);
+    setIsEditing(false);
   }, []);
 
   const sortIndicator = (key) => {
@@ -341,22 +374,22 @@ export default function Home() {
     const exportData = sortedTableFeatures.map((f) => {
       const p = f.properties || {};
       const score = calculateVuln(p);
-      const area = parseArea(p.Appx_Area);
-      const density = area > 0 ? (p.Appx_Popu / area).toFixed(2) : 0;
+      const area = parseArea(p.area);
+      const density = area > 0 ? (p.population / area).toFixed(2) : 0;
       return {
-        "New Slum Code": p.New_Slum_code,
-        Name: p.Name,
-        Constituency: p.Constituency,
-        Zone: p.Zone_no,
-        Population: p.Appx_Popu,
-        Households: p.Appx_HH,
-        "Area (gaj)": p.Appx_Area,
-        "Monthly Income": p.monthly_Income,
+        "Code": p.code,
+        Name: p.name,
+        Constituency: p.constituency,
+        Zone: p.zone,
+        Population: p.population,
+        Households: p.households,
+        "Area (gaj)": p.area,
+        "Monthly Income": p.income,
         Density: density,
         "Vulnerability Score": score,
-        "Piped Water": p.piped_water,
-        Sewerage: p.Sewerage_network,
-        "Storm Drain": p.strom_water_drain
+        "Piped Water": p.water,
+        Sewerage: p.sewerage,
+        "Storm Drain": p.drain
       };
     });
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -386,7 +419,7 @@ export default function Home() {
     y += 8;
     const topVuln = sortedTableFeatures.slice(0, 5).map((f, i) => {
       const p = f.properties || {};
-      return `${i + 1}. ${p.Name || "N/A"} (Score: ${calculateVuln(p)})`;
+      return `${i + 1}. ${p.name || "N/A"} (Score: ${calculateVuln(p)})`;
     }).join("\n");
     doc.text(topVuln, 20, y);
     doc.save(`Slum_Dashboard_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -416,7 +449,7 @@ export default function Home() {
     return bounds;
   };
 
-  // Individual markers (no clustering)
+  // Individual markers
   useEffect(() => {
     if (!mapInstance) return;
 
@@ -444,7 +477,7 @@ export default function Home() {
     });
   }, [mapInstance, showMarkers, filteredFeatures, calculateVuln]);
 
-  // Heatmap (default ON)
+  // Heatmap
   useEffect(() => {
     if (!mapInstance) return;
 
@@ -495,7 +528,7 @@ export default function Home() {
   // Fly to selected
   useEffect(() => {
     if (!mapInstance || !selectedCode) return;
-    const feat = filteredFeatures.find((f) => f.properties?.New_Slum_code === selectedCode);
+    const feat = filteredFeatures.find((f) => f.properties?.code === selectedCode);
     if (!feat) return;
     const bounds = getFeatureLatLngBounds(feat);
     if (bounds.isValid() && (feat.geometry?.type === "Polygon" || feat.geometry?.type === "MultiPolygon")) {
@@ -505,6 +538,142 @@ export default function Home() {
       mapInstance.flyTo(center, 18, { duration: 1 });
     }
   }, [mapInstance, selectedCode, filteredFeatures]);
+
+  // Add editableFeatureGroup to map when mapInstance loads
+  useEffect(() => {
+    if (mapInstance && editableFeatureGroupRef.current) {
+      mapInstance.addLayer(editableFeatureGroupRef.current);
+    }
+    return () => {
+      if (mapInstance && editableFeatureGroupRef.current) {
+        mapInstance.removeLayer(editableFeatureGroupRef.current);
+      }
+    };
+  }, [mapInstance]);
+
+  // Setup Leaflet Draw control
+  useEffect(() => {
+    if (!mapInstance) return;
+
+    if (mapInstance._drawControl) {
+      mapInstance.removeControl(mapInstance._drawControl);
+    }
+
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polygon: false,
+        polyline: false,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        circlemarker: false,
+      },
+      edit: {
+        featureGroup: editableFeatureGroupRef.current,
+        remove: false,
+      },
+    });
+
+    mapInstance.addControl(drawControl);
+    mapInstance._drawControl = drawControl;
+
+    return () => {
+      if (mapInstance._drawControl) {
+        mapInstance.removeControl(mapInstance._drawControl);
+        delete mapInstance._drawControl;
+      }
+    };
+  }, [mapInstance]);
+
+  // Sync ONLY the selected polygon into editable feature group when editing is active
+  useEffect(() => {
+    const group = editableFeatureGroupRef.current;
+    if (!group || !geoJsonRef.current || typeof geoJsonRef.current.getLayers !== "function") return;
+
+    group.clearLayers();
+
+    if (!isEditing || !selectedCode) return;
+
+    const selectedLayer = geoJsonRef.current.getLayers().find(layer => 
+      layer.feature && layer.feature.properties && layer.feature.properties.code === selectedCode
+    );
+
+    if (selectedLayer) {
+      const clone = selectedLayer.toGeoJSON();
+      const editableLayer = L.geoJSON(clone, {
+        style: { color: "#7C3AED", weight: 6, dashArray: "6,6" }
+      }).getLayers()[0];
+      editableLayer.feature = clone; // preserve feature properties for backend update
+      group.addLayer(editableLayer);
+    }
+  }, [isEditing, selectedCode, filteredFeatures]);
+
+  // Reset editing when selection changes
+  useEffect(() => {
+    setIsEditing(false);
+  }, [selectedCode]);
+
+  // Edit Boundary button handler
+  const handleStartEditing = () => {
+    if (!selectedCode) return;
+    setIsEditing(true);
+    // Enable Leaflet Draw editing on the layer (vertices become draggable)
+    setTimeout(() => {
+      editableFeatureGroupRef.current.eachLayer((layer) => {
+        if (layer.editing && typeof layer.editing.enable === "function") {
+          layer.editing.enable();
+        }
+      });
+    }, 100);
+  };
+
+  // Save Boundary button handler
+  const handleSaveBoundary = () => {
+    if (!selectedCode || !mapInstance) return;
+
+    let editedLayer = null;
+    editableFeatureGroupRef.current.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties.code === selectedCode) {
+        editedLayer = layer;
+      }
+    });
+
+    if (!editedLayer) {
+      alert("No edited layer found");
+      return;
+    }
+
+    const geometry = editedLayer.toGeoJSON().geometry;
+
+    fetch("http://localhost:5000/api/update-boundary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: selectedCode, geometry }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          alert("Boundary saved");
+          fetch("http://localhost:5000/api/boundary")
+            .then((r) => r.json())
+            .then((data) => {
+              setBoundaryData(data);
+              setIsEditing(false);
+            })
+            .catch((err) => console.error(err));
+        } else {
+          alert("Failed to save boundary");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Save failed");
+      });
+  };
+
+  // Cancel editing
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+  };
 
   // Cleanup
   useEffect(() => {
@@ -663,6 +832,8 @@ export default function Home() {
 
                   {showBoundaries && (
                     <GeoJSON
+                      ref={geoJsonRef}
+                      key={`geojson-${isEditing ? 'edit' : 'view'}-${selectedCode || ''}-${filteredFeatures.length}`}
                       data={geoJsonData}
                       style={getPolygonStyle}
                       onEachFeature={onEachFeatureHandler}
@@ -670,6 +841,74 @@ export default function Home() {
                   )}
                 </LeafletMapContainer>
               </div>
+
+              {/* Floating Edit / Save buttons */}
+              {selectedCode && (
+                <div style={{ 
+                  position: "absolute", 
+                  bottom: "30px", 
+                  left: "30px", 
+                  zIndex: 1001, 
+                  display: "flex", 
+                  gap: "12px",
+                  background: "#fff",
+                  padding: "8px",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.15)",
+                  border: "1px solid #e2e8f0"
+                }}>
+                  {!isEditing ? (
+                    <button 
+                      onClick={handleStartEditing}
+                      style={{ 
+                        padding: "12px 24px", 
+                        background: "#7C3AED", 
+                        color: "#fff", 
+                        border: "none", 
+                        borderRadius: "8px", 
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontSize: "14px"
+                      }}
+                    >
+                      ✏️ Edit Boundary
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={handleSaveBoundary}
+                        style={{ 
+                          padding: "12px 24px", 
+                          background: "#10b981", 
+                          color: "#fff", 
+                          border: "none", 
+                          borderRadius: "8px", 
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "14px"
+                        }}
+                      >
+                        💾 Save Boundary
+                      </button>
+                      <button 
+                        onClick={handleCancelEditing}
+                        style={{ 
+                          padding: "12px 24px", 
+                          background: "#ef4444", 
+                          color: "#fff", 
+                          border: "none", 
+                          borderRadius: "8px", 
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "14px"
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div style={{ position: "absolute", top: "22px", right: "22px", zIndex: 1000, background: "#fff", padding: "14px 18px", borderRadius: "12px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", gap: "11px", fontSize: "13.8px", border: "1px solid #e2e8f0" }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "9px", cursor: "pointer" }}>
@@ -720,13 +959,13 @@ export default function Home() {
             <table style={{ width: "100%", minWidth: "1150px", borderCollapse: "collapse", fontSize: "13.6px" }}>
               <thead style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 30 }}>
                 <tr style={{ borderBottom: "2px solid #cbd5e1" }}>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Name")}>Slum Name{sortIndicator("Name")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Constituency")}>Constituency{sortIndicator("Constituency")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Zone_no")}>Zone{sortIndicator("Zone_no")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Appx_Popu")}>Population{sortIndicator("Appx_Popu")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Appx_HH")}>Households{sortIndicator("Appx_HH")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Appx_Area")}>Area (gaj){sortIndicator("Appx_Area")}</th>
-                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("monthly_Income")}>Income (₹){sortIndicator("monthly_Income")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("name")}>Slum Name{sortIndicator("name")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("constituency")}>Constituency{sortIndicator("constituency")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("zone")}>Zone{sortIndicator("zone")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("population")}>Population{sortIndicator("population")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("households")}>Households{sortIndicator("households")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("area")}>Area (gaj){sortIndicator("area")}</th>
+                  <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("income")}>Income (₹){sortIndicator("income")}</th>
                   <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Density")}>Density{sortIndicator("Density")}</th>
                   <th style={{ padding: "16px 18px", textAlign: "left", fontWeight: 600, color: "#475569", cursor: "pointer" }} onClick={() => handleSort("Vuln")}>Vuln Score{sortIndicator("Vuln")}</th>
                 </tr>
@@ -735,28 +974,28 @@ export default function Home() {
                 {paginatedTableFeatures.map((feature, localIndex) => {
                   const p = feature.properties || {};
                   const score = calculateVuln(p);
-                  const areaN = parseArea(p.Appx_Area);
-                  const density = areaN > 0 ? (p.Appx_Popu / areaN).toFixed(2) : "0.00";
-                  const isSelected = p.New_Slum_code === selectedCode;
+                  const areaN = parseArea(p.area);
+                  const density = areaN > 0 ? (p.population / areaN).toFixed(2) : "0.00";
+                  const isSelected = p.code === selectedCode;
                   const globalIndex = (currentPage - 1) * rowsPerPage + localIndex;
                   const isTopVuln = globalIndex < 5;
                   return (
                     <tr
-                      key={p.New_Slum_code}
-                      onClick={() => handleRowClick(p.New_Slum_code)}
+                      key={p.code}
+                      onClick={() => handleRowClick(p.code)}
                       style={{
                         cursor: "pointer",
                         backgroundColor: isSelected ? "#f3e8ff" : isTopVuln ? "#fffbeb" : score >= 4 ? "#fef2f2" : "transparent",
                         transition: "background-color 0.15s"
                       }}
                     >
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Name ?? "N/A"}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Constituency ?? "N/A"}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Zone_no ?? "N/A"}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Appx_Popu ?? 0}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Appx_HH ?? 0}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.Appx_Area ?? "N/A"}</td>
-                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>₹{(p.monthly_Income ?? 0).toLocaleString()}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.name ?? "N/A"}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.constituency ?? "N/A"}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.zone ?? "N/A"}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.population ?? 0}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.households ?? 0}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{p.area ?? "N/A"}</td>
+                      <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>₹{(p.income ?? 0).toLocaleString()}</td>
                       <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9" }}>{density}</td>
                       <td style={{ padding: "15px 18px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, backgroundColor: score >= 4 ? "#fee2e2" : score >= 2 ? "#fefce8" : "#f0fdf4", color: score >= 4 ? "#b91c1c" : score >= 2 ? "#854d0e" : "#166534" }}>{score}</td>
                     </tr>
