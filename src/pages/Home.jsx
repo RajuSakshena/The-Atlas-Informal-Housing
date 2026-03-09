@@ -68,7 +68,7 @@ function renderTooltipContent(p) {
       <div><strong>Income:</strong> ₹{(p.income ?? 0).toLocaleString()}</div>
       <div><strong>Total Structures:</strong> {p.structures ?? 0}</div>
       <div><strong>Pucca Structures:</strong> {p.pucca ?? 0}</div>
-      <div><strong>Semi Pucca Structures:</strong> {p.semiPucca ?? 0}</div>
+      <div><strong>Semi Pucca Structures:</strong> {p.Appx_Semi_pucca ?? 0}</div>
       <div><strong>Kaccha Structures:</strong> {p.kaccha ?? 0}</div>
       <div><strong>Piped Water:</strong> {p.water ?? "N/A"}</div>
       <div><strong>Sewerage:</strong> {p.sewerage ?? "N/A"}</div>
@@ -115,6 +115,7 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [city, setCity] = useState("Delhi");
   const [boundaryData, setBoundaryData] = useState(null);
+  const [boundaryVersion, setBoundaryVersion] = useState(0);
   const [filters, setFilters] = useState({
     constituency: "",
     zone: "",
@@ -588,25 +589,81 @@ export default function Home() {
   // Sync ONLY the selected polygon into editable feature group when editing is active
   useEffect(() => {
     const group = editableFeatureGroupRef.current;
-    if (!group || !geoJsonRef.current || typeof geoJsonRef.current.getLayers !== "function") return;
+    if (!group || !geoJsonRef.current) return;
 
     group.clearLayers();
 
-    if (!isEditing || !selectedCode) return;
+    if (!isEditing || !selectedCode || !mapInstance) return;
 
-    const selectedLayer = geoJsonRef.current.getLayers().find(layer => 
+    const layers = geoJsonRef.current.getLayers();
+    if (!layers || !Array.isArray(layers)) {
+      console.warn("GeoJSON layers not available");
+      return;
+    }
+
+    const selectedLayer = layers.find(layer => 
       layer.feature && layer.feature.properties && layer.feature.properties.code === selectedCode
     );
 
-    if (selectedLayer) {
-      const clone = selectedLayer.toGeoJSON();
-      const editableLayer = L.geoJSON(clone, {
-        style: { color: "#7C3AED", weight: 6, dashArray: "6,6" }
-      }).getLayers()[0];
-      editableLayer.feature = clone; // preserve feature properties for backend update
-      group.addLayer(editableLayer);
+    if (!selectedLayer) {
+      console.warn(`No layer found for code: ${selectedCode}`);
+      return;
     }
-  }, [isEditing, selectedCode, filteredFeatures]);
+
+    const selectedFeature = selectedLayer.feature;
+    const { geometry, properties } = selectedFeature;
+    const style = { color: "#7C3AED", weight: 6, dashArray: "6,6" };
+
+    let layersAdded = false;
+
+    if (geometry.type === "Polygon") {
+      const coords = geometry.coordinates;
+      try {
+        const latLngs = coords.map(ring => ring.map(([lng, lat]) => [lat, lng]));
+        const polygon = L.polygon(latLngs, style);
+        const singleGeom = { type: "Polygon", coordinates: coords };
+        polygon.feature = { type: "Feature", properties: { ...properties }, geometry: singleGeom };
+        const bounds = polygon.getBounds();
+        if (bounds.isValid()) {
+          group.addLayer(polygon);
+          layersAdded = true;
+        } else {
+          console.warn(`Invalid bounds for polygon (code: ${selectedCode})`);
+        }
+      } catch (error) {
+        console.warn(`Error creating polygon layer (code: ${selectedCode}):`, error);
+      }
+    } else if (geometry.type === "MultiPolygon") {
+      geometry.coordinates.forEach((polyCoords, index) => {
+        try {
+          const latLngs = polyCoords.map(ring => ring.map(([lng, lat]) => [lat, lng]));
+          const polygon = L.polygon(latLngs, style);
+          const singleGeom = { type: "Polygon", coordinates: polyCoords };
+          polygon.feature = { type: "Feature", properties: { ...properties }, geometry: singleGeom };
+          const bounds = polygon.getBounds();
+          if (bounds.isValid()) {
+            group.addLayer(polygon);
+            layersAdded = true;
+          } else {
+            console.warn(`Invalid bounds for multi polygon part ${index} (code: ${selectedCode})`);
+          }
+        } catch (error) {
+          console.warn(`Error creating polygon layer for multi part ${index} (code: ${selectedCode}):`, error);
+        }
+      });
+    } else {
+      console.warn(`Unsupported geometry type: ${geometry.type} (code: ${selectedCode})`);
+    }
+
+    if (layersAdded) {
+      group.eachLayer((layer) => {
+        if (layer.editing && layer.editing.enable) {
+          layer.editing.enable();
+        }
+      });
+      mapInstance.fire("draw:editstart");
+    }
+  }, [isEditing, selectedCode, mapInstance]);
 
   // Reset editing when selection changes
   useEffect(() => {
@@ -615,35 +672,38 @@ export default function Home() {
 
   // Edit Boundary button handler
   const handleStartEditing = () => {
-    if (!selectedCode) return;
+    if (!selectedCode || !mapInstance) return;
     setIsEditing(true);
-    // Enable Leaflet Draw editing on the layer (vertices become draggable)
-    setTimeout(() => {
-      editableFeatureGroupRef.current.eachLayer((layer) => {
-        if (layer.editing && typeof layer.editing.enable === "function") {
-          layer.editing.enable();
-        }
-      });
-    }, 100);
   };
 
   // Save Boundary button handler
   const handleSaveBoundary = () => {
     if (!selectedCode || !mapInstance) return;
 
-    let editedLayer = null;
-    editableFeatureGroupRef.current.eachLayer((layer) => {
-      if (layer.feature && layer.feature.properties.code === selectedCode) {
-        editedLayer = layer;
+    const group = editableFeatureGroupRef.current;
+    let editedLayers = [];
+    group.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties && layer.feature.properties.code === selectedCode) {
+        editedLayers.push(layer);
       }
     });
 
-    if (!editedLayer) {
+    if (editedLayers.length === 0) {
       alert("No edited layer found");
       return;
     }
 
-    const geometry = editedLayer.toGeoJSON().geometry;
+    const geometries = editedLayers.map(layer => layer.toGeoJSON().geometry);
+
+    let geometry;
+    if (geometries.length === 1) {
+      geometry = geometries[0];
+    } else {
+      geometry = {
+        type: "MultiPolygon",
+        coordinates: geometries.map(g => g.coordinates)
+      };
+    }
 
     fetch("https://slum-impact-backend.onrender.com/api/update-boundary", {
       method: "POST",
@@ -657,6 +717,7 @@ export default function Home() {
             .then((r) => r.json())
             .then((data) => {
               setBoundaryData(data);
+              setBoundaryVersion((v) => v + 1); // Force GeoJSON remount with new data
               setIsEditing(false);
             })
             .catch((err) => console.error(err));
@@ -830,10 +891,10 @@ export default function Home() {
                   />
                   <MapInitializer setMap={setMapInstance} />
 
-                  {showBoundaries && (
+                  {showBoundaries && boundaryData && (
                     <GeoJSON
                       ref={geoJsonRef}
-                      key={`geojson-${isEditing ? 'edit' : 'view'}-${selectedCode || ''}-${filteredFeatures.length}`}
+                      key={`geojson-layer-${boundaryVersion}`}
                       data={geoJsonData}
                       style={getPolygonStyle}
                       onEachFeature={onEachFeatureHandler}
