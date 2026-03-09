@@ -68,7 +68,7 @@ function renderTooltipContent(p) {
       <div><strong>Income:</strong> ₹{(p.income ?? 0).toLocaleString()}</div>
       <div><strong>Total Structures:</strong> {p.structures ?? 0}</div>
       <div><strong>Pucca Structures:</strong> {p.pucca ?? 0}</div>
-      <div><strong>Semi Pucca Structures:</strong> {p.Appx_Semi_pucca ?? 0}</div>
+      <div><strong>Semi Pucca Structures:</strong> {p.semiPucca ?? 0}</div>
       <div><strong>Kaccha Structures:</strong> {p.kaccha ?? 0}</div>
       <div><strong>Piped Water:</strong> {p.water ?? "N/A"}</div>
       <div><strong>Sewerage:</strong> {p.sewerage ?? "N/A"}</div>
@@ -134,7 +134,7 @@ export default function Home() {
   const rowsPerPage = 10;
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/boundary")
+    fetch("https://slum-impact-backend.onrender.com/api/boundary")
       .then((res) => res.json())
       .then((data) => setBoundaryData(data))
       .catch((err) => console.error("Failed to fetch boundaries:", err));
@@ -645,7 +645,7 @@ export default function Home() {
 
     const geometry = editedLayer.toGeoJSON().geometry;
 
-    fetch("http://localhost:5000/api/update-boundary", {
+    fetch("https://slum-impact-backend.onrender.com/api/update-boundary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: selectedCode, geometry }),
@@ -653,7 +653,7 @@ export default function Home() {
       .then((res) => {
         if (res.ok) {
           alert("Boundary saved");
-          fetch("http://localhost:5000/api/boundary")
+          fetch("https://slum-impact-backend.onrender.com/api/boundary")
             .then((r) => r.json())
             .then((data) => {
               setBoundaryData(data);
