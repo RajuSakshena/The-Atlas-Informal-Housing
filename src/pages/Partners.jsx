@@ -2,23 +2,21 @@ import cfsd from "../images/cfsd.jpeg";
 import tmi from "../images/TMI.png";
 
 export default function Partners() {
-
   const partners = [
-
     {
       name: "Centre for Social Development (CFSD)",
       image: cfsd,
+      website: "https://cfsdindia.org/",
       description:
         "Centre for Social Development (CFSD) works towards inclusive urban and social development through research, capacity building, and community-based initiatives."
     },
-
     {
       name: "The Metropolitan Institute (TMI)",
       image: tmi,
+      website: "https://themetropolitaninstitute.com/",
       description:
-        "The Metropolitan Institute (TMI) is a social impact think-and-do-tank that works at the confluence of government, civil society, and the market. TMI works on capacity building with government and non-profits, drives philanthropy and giving programs, builds and co-creates tech for good, and enables catalytic social impact environments across gender, climate, education, waste management, safety, local governance, and technology for social impact."
+        "The Metropolitan Institute (TMI) is a social impact think-and-do-tank that works at the confluence of government, civil society, and the market."
     }
-
   ];
 
   return (
@@ -85,11 +83,30 @@ export default function Partners() {
               style={{
                 fontSize: "15px",
                 color: "#555",
-                lineHeight: "1.6"
+                lineHeight: "1.6",
+                marginBottom: "20px"
               }}
             >
               {partner.description}
             </p>
+
+            <button
+              onClick={() => window.open(partner.website, "_blank")}
+              style={{
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: "6px",
+                background: "#007bff",
+                color: "white",
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "0.3s"
+              }}
+              onMouseOver={(e) => (e.target.style.background = "#0056b3")}
+              onMouseOut={(e) => (e.target.style.background = "#007bff")}
+            >
+              Visit Website
+            </button>
           </div>
         ))}
       </div>
