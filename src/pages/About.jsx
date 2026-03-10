@@ -18,17 +18,10 @@ export default function About() {
           color: "#222"
         }}
       >
-        About Slum Impact
+        About 
       </h1>
 
-      <p style={{ fontSize: "18px", marginBottom: "20px" }}>
-        <strong>Slum Impact</strong> is an initiative dedicated to understanding,
-        documenting and improving the living conditions of people residing in
-        informal settlements. Through spatial data, community insights and
-        research-driven analysis, the project aims to highlight the realities
-        faced by millions of urban residents living in slums and informal
-        housing environments.
-      </p>
+     
 
       <p style={{ fontSize: "18px", marginBottom: "20px" }}>
         Rapid urbanization across developing countries has led to the expansion
@@ -93,7 +86,7 @@ export default function About() {
         Our vision is to create a transparent, data-driven understanding of
         informal housing that empowers governments, NGOs, researchers and local
         communities to work together toward more inclusive cities. Through the
-        Atlas of Informal Housing, Slum Impact aims to bridge the gap between
+        Atlas of Informal Housing, We aims to bridge the gap between
         spatial data and social policy—helping ensure that the voices and
         realities of informal settlement residents are represented in the
         planning of future urban environments.
