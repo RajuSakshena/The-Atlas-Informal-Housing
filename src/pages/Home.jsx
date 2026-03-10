@@ -1039,14 +1039,13 @@ export default function Home() {
                   const density = areaN > 0 ? (p.population / areaN).toFixed(2) : "0.00";
                   const isSelected = p.code === selectedCode;
                   const globalIndex = (currentPage - 1) * rowsPerPage + localIndex;
-                  const isTopVuln = globalIndex < 5;
                   return (
                     <tr
                       key={p.code}
                       onClick={() => handleRowClick(p.code)}
                       style={{
                         cursor: "pointer",
-                        backgroundColor: isSelected ? "#f3e8ff" : isTopVuln ? "#fffbeb" : score >= 4 ? "#fef2f2" : "transparent",
+                        backgroundColor: isSelected ? "#f3e8ff" : "transparent",
                         transition: "background-color 0.15s"
                       }}
                     >
