@@ -1162,7 +1162,7 @@ export default function Home() {
                 <div style={{ fontWeight: 600, fontSize: "16px", marginBottom: "16px", color: "#1e2937", textAlign: "center" }}>Pre vs Post 1995</div>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie data={prePostData} cx="50%" cy="50%" innerRadius={48} outerRadius={82} dataKey="value" nameKey="name">
+                    <Pie data={prePostData} cx="50%" cy="50%" innerRadius={48} outerRadius={82} dataKey="value" nameKey="name" label={({ name, value, percent }) => `${name} ${value} (${(percent * 100).toFixed(0)}%)`}>
                       {prePostData.map((_, i) => <Cell key={i} fill={["#7C3AED", "#ec4899", "#14b8a6"][i % 3]} />)}
                     </Pie>
                     <RechartsTooltip />
@@ -1174,7 +1174,7 @@ export default function Home() {
                 <div style={{ fontWeight: 600, fontSize: "16px", marginBottom: "16px", color: "#1e2937", textAlign: "center" }}>Land Use Distribution</div>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie data={landuseData} cx="50%" cy="50%" outerRadius={82} dataKey="value" nameKey="name">
+                    <Pie data={landuseData} cx="50%" cy="50%" outerRadius={82} dataKey="value" nameKey="name" label={({ name, value, percent }) => `${name} ${value} (${(percent * 100).toFixed(0)}%)`}>
                       {landuseData.map((_, i) => <Cell key={i} fill={["#7C3AED", "#22c55e", "#eab308", "#f43f5e", "#8b5cf6"][i % 5]} />)}
                     </Pie>
                     <RechartsTooltip />
